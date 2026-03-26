@@ -3,142 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>رسائل المودة</title>
+    <title>رسائل خاصة ومؤمنة</title>
     <style>
         :root {
             --primary-color: #2563eb;
-            --bg-color: #f8fafc;
+            --bg-color: #f1f5f9;
             --card-bg: #ffffff;
             --text-main: #1e293b;
-            --text-muted: #64748b;
-            --accent-color: #f1f5f9;
+            --locked-bg: #e2e8f0;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
             background-color: var(--bg-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
         }
 
-        .container {
-            width: 100%;
-            max-width: 600px;
+        .container { width: 100%; max-width: 600px; }
+
+        /* ترويسة العد التنازلي */
+        .countdown-header {
+            background: #1e293b; color: white;
+            padding: 15px; border-radius: 10px;
+            margin-bottom: 25px; text-align: center; width: 100%;
         }
 
         .message-card {
             background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            margin-bottom: 25px;
-            overflow: hidden;
-            border: 1px solid #e2e8f0;
-            transition: transform 0.2s;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .message-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-radius: 12px; margin-bottom: 20px;
+            border: 1px solid #cbd5e1; overflow: hidden;
+            transition: 0.3s;
         }
 
         .card-header {
-            background-color: var(--accent-color);
-            padding: 12px 20px;
+            background-color: #f8fafc; padding: 15px 20px;
             border-bottom: 1px solid #e2e8f0;
-            color: var(--primary-color);
-            font-weight: bold;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
+            color: var(--primary-color); font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .card-header::before {
-            content: "👤";
-            margin-left: 10px;
+        .card-body { padding: 20px; display: none; /* مخفي افتراضياً */ }
+
+        .lock-screen {
+            padding: 30px; text-align: center;
+            background: #f8fafc;
         }
 
-        .card-body {
-            padding: 20px;
-            color: var(--text-main);
-            line-height: 1.8;
-            font-size: 1.1rem;
-            white-space: pre-wrap; /* للحفاظ على المسافات والسطور الجديدة */
+        input[type="password"] {
+            padding: 8px; border-radius: 5px; border: 1px solid #cbd5e1;
+            width: 60%; margin-bottom: 10px; outline: none;
         }
 
-        /* الجزء الجديد لعرض التاريخ والوقت */
-        .card-footer {
-            padding: 10px 20px;
-            background-color: #fafafa;
-            border-top: 1px dashed #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            color: var(--text-muted);
-            font-size: 0.85rem;
+        button {
+            padding: 8px 20px; background: var(--primary-color);
+            color: white; border: none; border-radius: 5px; cursor: pointer;
         }
 
-        .meta-item {
-            display: flex;
-            align-items: center;
-        }
+        button:hover { opacity: 0.9; }
 
-        .meta-item::before {
-            margin-left: 5px;
-        }
-
-        .date-icon::before { content: "📅"; }
-        .time-icon::before { content: "🕒"; }
-
-        #loading {
-            text-align: center;
-            color: var(--text-muted);
-            margin-top: 50px;
-        }
+        .revealed .card-body { display: block; white-space: pre-wrap; }
+        .revealed .lock-screen { display: none; }
     </style>
 </head>
 <body>
 
+    <div class="countdown-header" id="countdown-box">
+        الوقت المتبقي لفتح جميع الرسائل تلقائياً: <span id="timer">-- : -- : --</span>
+    </div>
+
     <div class="container" id="messages-container">
-        <div id="loading">جاري تحميل الرسائل...</div>
+        <div id="loading" style="text-align:center;">جاري التحميل...</div>
     </div>
 
     <script>
+        // التاريخ المحدد لفتح كل الرسائل تلقائياً
+        const unlockDate = new Date("June 1, 2026 00:00:00").getTime();
+        let isGlobalUnlock = false;
+
         async function loadMessages() {
             const container = document.getElementById('messages-container');
-            
             try {
                 const response = await fetch('data.json');
                 const data = await response.json();
-                
                 container.innerHTML = '';
 
-                data.forEach(item => {
+                // تحديث العد التنازلي
+                const timerInterval = setInterval(() => {
+                    const now = new Date().getTime();
+                    const distance = unlockDate - now;
+
+                    if (distance < 0) {
+                        clearInterval(timerInterval);
+                        document.getElementById('timer').innerText = "تم فتح جميع الرسائل";
+                        isGlobalUnlock = true;
+                        document.querySelectorAll('.message-card').forEach(card => card.classList.add('revealed'));
+                    } else {
+                        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                        document.getElementById('timer').innerText = `${days} يوم و ${hours}:${minutes}:${seconds}`;
+                    }
+                }, 1000);
+
+                // إنشاء الكروت
+                data.forEach((item, index) => {
                     const card = document.createElement('div');
                     card.className = 'message-card';
-
-                    // معالجة البيانات في حال عدم وجود تاريخ أو وقت لبعض الرسائل القديمة
-                    const dateStr = item.date || "غير محدد";
-                    const timeStr = item.time || "غير محدد";
+                    card.id = `card-${index}`;
 
                     card.innerHTML = `
-                        <div class="card-header">إلى: ${item.recipient}</div>
-                        <div class="card-body">${item.message}</div>
-                        <div class="card-footer">
-                            <span class="meta-item date-icon">${dateStr}</span>
-                            <span class="meta-item time-icon">${timeStr}</span>
+                        <div class="card-header">إلى: ${item.recipient} <span>🔒</span></div>
+                        <div class="lock-screen" id="lock-${index}">
+                            <p style="font-size:0.9rem; color:#64748b;">هذه الرسالة محمية بكلمة سر</p>
+                            <input type="password" id="pass-${index}" placeholder="أدخل كلمة السر">
+                            <br>
+                            <button onclick="checkPass(${index}, '${item.password}')">فتح الرسالة</button>
                         </div>
+                        <div class="card-body">${item.message}</div>
                     `;
 
                     container.appendChild(card);
                 });
 
             } catch (error) {
-                console.error('Error loading JSON:', error);
-                container.innerHTML = '<div style="color:red; text-align:center;">عذراً، فشل تحميل البيانات. تأكد من وجود ملف data.json</div>';
+                container.innerHTML = '<div style="color:red;">خطأ في تحميل ملف JSON</div>';
+            }
+        }
+
+        function checkPass(index, correctPass) {
+            const input = document.getElementById(`pass-${index}`).value;
+            if (input === correctPass) {
+                document.getElementById(`card-${index}`).classList.add('revealed');
+            } else {
+                alert("كلمة السر غير صحيحة");
             }
         }
 
