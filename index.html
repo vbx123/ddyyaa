@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عرض الرسائل الاحترافي</title>
+    <title>رسائل المودة</title>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -11,6 +11,7 @@
             --card-bg: #ffffff;
             --text-main: #1e293b;
             --text-muted: #64748b;
+            --accent-color: #f1f5f9;
         }
 
         body {
@@ -28,47 +29,70 @@
             max-width: 600px;
         }
 
-        /* تصميم صندوق الرسالة */
         .message-card {
             background: var(--card-bg);
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             overflow: hidden;
             border: 1px solid #e2e8f0;
             transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
         }
 
         .message-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
-        /* الجزء العلوي (اسم الشخص) */
         .card-header {
-            background-color: #f1f5f9;
-            padding: 10px 20px;
+            background-color: var(--accent-color);
+            padding: 12px 20px;
             border-bottom: 1px solid #e2e8f0;
             color: var(--primary-color);
             font-weight: bold;
-            font-size: 0.9rem;
+            font-size: 1rem;
             display: flex;
             align-items: center;
         }
 
         .card-header::before {
             content: "👤";
-            margin-left: 8px;
+            margin-left: 10px;
         }
 
-        /* الجزء السفلي (محتوى الرسالة) */
         .card-body {
             padding: 20px;
             color: var(--text-main);
-            line-height: 1.6;
+            line-height: 1.8;
             font-size: 1.1rem;
+            white-space: pre-wrap; /* للحفاظ على المسافات والسطور الجديدة */
         }
 
-        /* رسالة التحميل */
+        /* الجزء الجديد لعرض التاريخ والوقت */
+        .card-footer {
+            padding: 10px 20px;
+            background-color: #fafafa;
+            border-top: 1px dashed #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .meta-item::before {
+            margin-left: 5px;
+        }
+
+        .date-icon::before { content: "📅"; }
+        .time-icon::before { content: "🕒"; }
+
         #loading {
             text-align: center;
             color: var(--text-muted);
@@ -87,21 +111,26 @@
             const container = document.getElementById('messages-container');
             
             try {
-                // جلب البيانات من ملف JSON
                 const response = await fetch('data.json');
                 const data = await response.json();
                 
-                // مسح رسالة التحميل
                 container.innerHTML = '';
 
-                // إنشاء الصناديق بناءً على البيانات
                 data.forEach(item => {
                     const card = document.createElement('div');
                     card.className = 'message-card';
 
+                    // معالجة البيانات في حال عدم وجود تاريخ أو وقت لبعض الرسائل القديمة
+                    const dateStr = item.date || "غير محدد";
+                    const timeStr = item.time || "غير محدد";
+
                     card.innerHTML = `
                         <div class="card-header">إلى: ${item.recipient}</div>
                         <div class="card-body">${item.message}</div>
+                        <div class="card-footer">
+                            <span class="meta-item date-icon">${dateStr}</span>
+                            <span class="meta-item time-icon">${timeStr}</span>
+                        </div>
                     `;
 
                     container.appendChild(card);
@@ -113,7 +142,6 @@
             }
         }
 
-        // تشغيل الدالة عند تحميل الصفحة
         window.onload = loadMessages;
     </script>
 </body>
